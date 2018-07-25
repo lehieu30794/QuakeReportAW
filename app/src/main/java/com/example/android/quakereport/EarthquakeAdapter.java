@@ -9,8 +9,6 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
-
 import java.util.ArrayList;
 
 public class EarthquakeAdapter extends ArrayAdapter<Earthquake> {
@@ -24,7 +22,7 @@ public class EarthquakeAdapter extends ArrayAdapter<Earthquake> {
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         if (convertView == null){
-            convertView = LayoutInflater.from(getContext()).inflate(R.layout.list_earthquake_item,parent, false);
+            convertView = LayoutInflater.from(getContext()).inflate(R.layout.earthquake_list_item,parent, false);
         }
 
         Earthquake currentEarthquake = getItem(position);
