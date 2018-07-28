@@ -61,7 +61,10 @@ public final class QueryUtils {
                 //Extract relevant keys
                 JSONObject properties = currentEarthquake.getJSONObject("properties");
                 // At the level where we can access individual values of properties JSON object
-                String magnitude = properties.getString("mag");
+                /*String magnitude = properties.getString("mag");*/
+                // Extract the value for the key called "mag"
+                double magnitude = properties.getDouble("mag");
+
                 String location = properties.getString("place");
                 /*String time = properties.getString("time");*/
 
@@ -70,6 +73,8 @@ public final class QueryUtils {
 
                 Earthquake earthquake = new Earthquake(magnitude, location, time);
                 earthquakes.add(earthquake);
+
+
 
             }
 
