@@ -4,12 +4,13 @@ public class Earthquake {
 
     String mMag;
     String mLocation;
-    String mDate;
+    /** Time of the earthquake */
+    private long mTimeInMilliseconds;
 
-    public Earthquake(String mag, String location, String date) {
+    public Earthquake(String mag, String location, long timeInMilliseconds) {
         mMag = mag;
         mLocation = location;
-        mDate = date;
+        mTimeInMilliseconds = timeInMilliseconds;
     }
 
     public String getMag() {
@@ -20,7 +21,10 @@ public class Earthquake {
         return mLocation;
     }
 
-    public String getDate() {
-        return mDate;
+    /**
+     * Returns the time of the earthquake.
+     */
+    public long getTimeInMilliseconds() {
+        return mTimeInMilliseconds;
     }
 }
