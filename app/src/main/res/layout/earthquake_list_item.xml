@@ -13,12 +13,16 @@
         android:textSize="16sp" />
 
     <TextView
-        android:id="@+id/location_text_view"
+        android:id="@+id/location_offset"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:layout_weight="1"
-        android:textSize="16sp" />
+        android:layout_weight="1" />
+
+    <TextView
+        android:id="@+id/primary_location"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1" />
 
     <TextView
         android:id="@+id/date_text_view"

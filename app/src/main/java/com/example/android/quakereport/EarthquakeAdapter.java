@@ -14,6 +14,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 public class EarthquakeAdapter extends ArrayAdapter<Earthquake> {
+    /*Since we’ll frequently need to refer to the “ of “ text, we can define a static final String constant (that is a global variable) at the top of the EarthquakeAdapter class.*/
+    private static final String LOCATION_SEPARATOR = " of ";
 
     public EarthquakeAdapter (Activity context, ArrayList<Earthquake> earthquakes){
 
@@ -32,8 +34,10 @@ public class EarthquakeAdapter extends ArrayAdapter<Earthquake> {
         TextView magTextView = (TextView) convertView.findViewById(R.id.mag_text_view);
         magTextView.setText(currentEarthquake.getMag());
 
+
+        /*Not useful anymore because we want to split the string into two arrays as below codes
         TextView locationTextView = (TextView) convertView.findViewById(R.id.location_text_view);
-        locationTextView.setText(currentEarthquake.getLocation());
+        locationTextView.setText(currentEarthquake.getLocation());*/
 
         // Create a new Date object from the time in milliseconds of the earthquake
         Date dateObject = new Date(currentEarthquake.getTimeInMilliseconds());
@@ -52,6 +56,24 @@ public class EarthquakeAdapter extends ArrayAdapter<Earthquake> {
         timeView.setText(formattedTime);
 
         // Return the list item view that is now showing the appropriate data
+
+        String originalLocation = currentEarthquake.getLocation();
+        String primaryLocation;
+        String locationOffset;
+        if (originalLocation.contains(LOCATION_SEPARATOR)) {
+            String[] parts = originalLocation.split(LOCATION_SEPARATOR);
+            locationOffset = parts[0] + LOCATION_SEPARATOR;
+            primaryLocation = parts[1];
+        } else {
+            locationOffset = getContext().getString(R.string.near_the);
+            primaryLocation = originalLocation;
+        }
+
+        TextView primaryLocationView = (TextView) convertView.findViewById(R.id.primary_location);
+        primaryLocationView.setText(primaryLocation);
+
+        TextView locationOffsetView = (TextView) convertView.findViewById(R.id.location_offset);
+        locationOffsetView.setText(locationOffset);
 
         return convertView;
     }
