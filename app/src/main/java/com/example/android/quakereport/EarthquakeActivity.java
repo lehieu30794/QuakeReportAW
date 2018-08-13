@@ -30,6 +30,16 @@ import java.util.List;
 
 public class EarthquakeActivity extends AppCompatActivity {
 
+    //The only way to update the contents of the list is to update
+    // the data set within the EarthquakeAdapter.
+    // To access and modify the instance of the EarthquakeAdapter,
+    // we need to make it a global variable in the EarthquakeActivity.
+
+
+
+    // Set a global variable named mAdapter of the return type EarthquakeAdapter
+    private EarthquakeAdapter mAdapter;
+
     public static final String LOG_TAG = EarthquakeActivity.class.getName();
     /** URL for earthquake data from the USGS dataset */
     private static final String USGS_REQUEST_URL =
@@ -53,25 +63,33 @@ public class EarthquakeActivity extends AppCompatActivity {
         earthquakes.add(new Earthquake("7.2","San Francisco","Feb 2, 2016"));
         earthquakes.add(new Earthquake("7.2","San Francisco","Feb 2, 2016"));*/
 
-        // Don't need keyword new
-        ArrayList<Earthquake> earthquakes = QueryUtils.extractEarthquakes();
+        /*// Don't need keyword new => because ArrayList here is a return type
+        ArrayList<Earthquake> earthquakes = QueryUtils.extractEarthquakes();*/
 
         // Find a reference to the {@link ListView} in the layout
         ListView earthquakeListView = (ListView) findViewById(R.id.list);
 
-        // Create a new {@link ArrayAdapter} of earthquakes
-        final EarthquakeAdapter adapter = new EarthquakeAdapter(this, earthquakes);
+        /*// Create a new {@link ArrayAdapter} of earthquakes
+        final EarthquakeAdapter adapter = new EarthquakeAdapter(this, earthquakes);*/
+
+        // Create a EarthquakeAdapter with a reference to the variable mAdapter created above
+        // Meaning, A VARIABLE AND NEW OBJECT WORK WITH EACH OTHER
+        // Adapter set on ListView, not ArrayList
+        mAdapter = new EarthquakeAdapter (this, new ArrayList<Earthquake>());
+
 
         // Set the adapter on the {@link ListView}
         // so the list can be populated in the user interface
-        earthquakeListView.setAdapter(adapter);
+        earthquakeListView.setAdapter(mAdapter);
 
+        // Set an item click listener on the ListView, which sends an intent to a web browser
+        // to open a website with more information about the selected earthquake
         earthquakeListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
                 // Find the current earthquake that was clicked on
-                Earthquake currentEarthquake = adapter.getItem(position);
+                Earthquake currentEarthquake = mAdapter.getItem(position);
 
                 // Convert the String URL into a URI object (to pass into the Intent constructor)
                 Uri earthquakeUri = Uri.parse(currentEarthquake.getUrl());
@@ -85,6 +103,7 @@ public class EarthquakeActivity extends AppCompatActivity {
         });
     }
 
+    //WHY 3rd parameter is List<Earthquake> not ArrayList<Earthquake>
     private class EarthquakeAsyncTask extends AsyncTask<String, Void, List<Earthquake>>{
 
         @Override
@@ -92,9 +111,17 @@ public class EarthquakeActivity extends AppCompatActivity {
             return null;
         }
 
+        // VERY HARD TO GRASP HERE! because of new method and logic
         @Override
-        protected void onPostExecute(List<Earthquake> earthquakes) {
-            super.onPostExecute(earthquakes);
+        protected void onPostExecute(List<Earthquake> data /*earthquakes*/) {
+
+            //Clear the adapter of previous earthquake data
+            mAdapter.clear();
+
+            // If there is a valid list of {@link Earthquake}s, then add them to the adapter's
+            if (data != null && !data.isEmpty()){
+                mAdapter.addAll(data);
+            }
         }
     }
 }
