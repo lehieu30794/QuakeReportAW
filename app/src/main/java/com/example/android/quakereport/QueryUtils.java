@@ -6,14 +6,29 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Helper methods related to requesting and receiving earthquake data from USGS.
  */
 public final class QueryUtils {
+    /**
+     * Tag for the log messages
+     */
+    private static final String LOG_TAG = QueryUtils.class.getSimpleName();
 
-    /** Sample JSON response for a USGS query */
+    /**
+     * Sample JSON response for a USGS query
+     */
    /* private static final String SAMPLE_JSON_RESPONSE = "{\"type\":\"FeatureCollection\",\"metadata\":{\"generated\":1462295443000,\"url\":\"http://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2016-01-01&endtime=2016-01-31&minmag=6&limit=10\",\"title\":\"USGS Earthquakes\",\"status\":200,\"api\":\"1.5.2\",\"limit\":10,\"offset\":1,\"count\":10},\"features\":[{\"type\":\"Feature\",\"properties\":{\"mag\":7.2,\"place\":\"88km N of Yelizovo, Russia\",\"time\":1454124312220,\"updated\":1460674294040,\"tz\":720,\"url\":\"http://earthquake.usgs.gov/earthquakes/eventpage/us20004vvx\",\"detail\":\"http://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us20004vvx&format=geojson\",\"felt\":2,\"cdi\":3.4,\"mmi\":5.82,\"alert\":\"green\",\"status\":\"reviewed\",\"tsunami\":1,\"sig\":798,\"net\":\"us\",\"code\":\"20004vvx\",\"ids\":\",at00o1qxho,pt16030050,us20004vvx,gcmt20160130032510,\",\"sources\":\",at,pt,us,gcmt,\",\"types\":\",cap,dyfi,finite-fault,general-link,general-text,geoserve,impact-link,impact-text,losspager,moment-tensor,nearby-cities,origin,phase-data,shakemap,tectonic-summary,\",\"nst\":null,\"dmin\":0.958,\"rms\":1.19,\"gap\":17,\"magType\":\"mww\",\"type\":\"earthquake\",\"title\":\"M 7.2 - 88km N of Yelizovo, Russia\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[158.5463,53.9776,177]},\"id\":\"us20004vvx\"},\n" +
             "{\"type\":\"Feature\",\"properties\":{\"mag\":6.1,\"place\":\"94km SSE of Taron, Papua New Guinea\",\"time\":1453777820750,\"updated\":1460156775040,\"tz\":600,\"url\":\"http://earthquake.usgs.gov/earthquakes/eventpage/us20004uks\",\"detail\":\"http://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us20004uks&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":4.1,\"alert\":\"green\",\"status\":\"reviewed\",\"tsunami\":1,\"sig\":572,\"net\":\"us\",\"code\":\"20004uks\",\"ids\":\",us20004uks,gcmt20160126031023,\",\"sources\":\",us,gcmt,\",\"types\":\",cap,geoserve,losspager,moment-tensor,nearby-cities,origin,phase-data,shakemap,tectonic-summary,\",\"nst\":null,\"dmin\":1.537,\"rms\":0.74,\"gap\":25,\"magType\":\"mww\",\"type\":\"earthquake\",\"title\":\"M 6.1 - 94km SSE of Taron, Papua New Guinea\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[153.2454,-5.2952,26]},\"id\":\"us20004uks\"},\n" +
             "{\"type\":\"Feature\",\"properties\":{\"mag\":6.3,\"place\":\"50km NNE of Al Hoceima, Morocco\",\"time\":1453695722730,\"updated\":1460156773040,\"tz\":0,\"url\":\"http://earthquake.usgs.gov/earthquakes/eventpage/us10004gy9\",\"detail\":\"http://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us10004gy9&format=geojson\",\"felt\":117,\"cdi\":7.2,\"mmi\":5.28,\"alert\":\"green\",\"status\":\"reviewed\",\"tsunami\":0,\"sig\":695,\"net\":\"us\",\"code\":\"10004gy9\",\"ids\":\",us10004gy9,gcmt20160125042203,\",\"sources\":\",us,gcmt,\",\"types\":\",cap,dyfi,geoserve,impact-text,losspager,moment-tensor,nearby-cities,origin,phase-data,shakemap,tectonic-summary,\",\"nst\":null,\"dmin\":2.201,\"rms\":0.92,\"gap\":20,\"magType\":\"mww\",\"type\":\"earthquake\",\"title\":\"M 6.3 - 50km NNE of Al Hoceima, Morocco\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[-3.6818,35.6493,12]},\"id\":\"us10004gy9\"},\n" +
@@ -47,7 +62,66 @@ public final class QueryUtils {
      * Return a list of {@link Earthquake} objects that has been built up from
      * parsing a JSON response.
      */
-    public static ArrayList<Earthquake> extractEarthquakes() {
+    // NOT REALLY UNDERSTAND WHY THIS METHOD CHANGES THE DATA TO LIST<EARTHQUAKE> INSTEAD OF ARRAYLIST
+    private static List<Earthquake> extractFeatureFromJson(String earthquakeJSON) {
+
+
+        // Create an empty ArrayList that we can sart adding earthquakes to
+        List<Earthquake> earthquakes = new ArrayList<>();
+
+
+        try {
+            // Create a JSONObject from the JSON response string
+            JSONObject baseJsonResponse = new JSONObject(earthquakeJSON);
+
+
+            JSONArray earthquakeArray = baseJsonResponse.getJSONArray("features");
+
+
+            for (int i = 0; i < earthquakeArray.length(); i++) {
+
+
+                JSONObject currentEarthquake = earthquakeArray.getJSONObject(i);
+
+
+                JSONObject properties = currentEarthquake.getJSONObject("properties");
+
+
+                // GET DOUBLE, not get JSONObject
+                double magnitude = properties.getDouble("mag");
+
+
+                String location = properties.getString("place");
+
+
+                long time = properties.getLong("time");
+
+
+                String url = properties.getString("url");
+
+
+                Earthquake earthquake = new Earthquake(magnitude, location, time, url);
+
+
+                // ADD TO LIST!
+                earthquakes.add(earthquake);
+            }
+
+
+        }
+        // Try-Catch block appears because of the JSONObject exception thrown
+        catch (JSONException e) {
+
+
+            Log.e("QueryUtils", "Problem parsing the earthquake JSON results", e);
+        }
+
+
+        return earthquakes;
+    }
+
+
+    /*public static ArrayList<Earthquake> extractEarthquakes() {
 
         // Create an empty ArrayList that we can start adding earthquakes to
         ArrayList<Earthquake> earthquakes = new ArrayList<>();
@@ -65,18 +139,18 @@ public final class QueryUtils {
             JSONArray earthquakeArray = baseJsonResponse.getJSONArray("features");
 
             // Use loop
-            for (int i = 0; i<earthquakeArray.length(); i++){
+            for (int i = 0; i < earthquakeArray.length(); i++) {
                 //Pull out the specific JSON object with i
                 JSONObject currentEarthquake = earthquakeArray.getJSONObject(i);
                 //Extract relevant keys
                 JSONObject properties = currentEarthquake.getJSONObject("properties");
                 // At the level where we can access individual values of properties JSON object
-                /*String magnitude = properties.getString("mag");*/
+                *//*String magnitude = properties.getString("mag");*//*
                 // Extract the value for the key called "mag"
                 double magnitude = properties.getDouble("mag");
 
                 String location = properties.getString("place");
-                /*String time = properties.getString("time");*/
+                *//*String time = properties.getString("time");*//*
 
                 //Extract the value for the key called "time"
                 long time = properties.getLong("time");
@@ -86,7 +160,6 @@ public final class QueryUtils {
 
                 Earthquake earthquake = new Earthquake(magnitude, location, time, url);
                 earthquakes.add(earthquake);
-
 
 
             }
@@ -99,6 +172,127 @@ public final class QueryUtils {
         }
 
         // Return the list of earthquakes
+        return earthquakes;
+    }
+*/
+
+
+    private static URL createUrl(String stringUrl) {
+        URL url = null;
+        try {
+            // this is URL object, already declared as null above
+            url = new URL(stringUrl);
+        } catch (MalformedURLException e) {
+            Log.e(LOG_TAG, "Problem building the URL ", e);
+        }
+        return url;
+    }
+
+
+    // This method and createUrl method does not have connection in this class
+    private static String makeHttpRequest(URL url) throws IOException {
+        String jsonResponse = "";
+
+        // If the URL is null, then return early
+        if (url == null) {
+            return jsonResponse;
+        }
+
+
+        HttpURLConnection urlConnection = null;
+        InputStream inputStream = null;
+
+        try {
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setReadTimeout(10000 /* milliseconds */);
+            urlConnection.setConnectTimeout(15000 /* milliseconds */);
+            urlConnection.setRequestMethod("GET");
+            urlConnection.connect();
+
+            // If the request was successful (respond code 200),
+            // then read the input stream and parse the response
+            if (urlConnection.getResponseCode() == 200) {
+                inputStream = urlConnection.getInputStream();
+                // Need to have a method read InputStream after got data from the source
+                // Then store this into jsonResponse to generate a return later on
+                jsonResponse = readFromStream(inputStream);
+            } else {
+                Log.e(LOG_TAG, "Error response code: " + urlConnection.getResponseCode());
+            }
+
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Problem retriving the earthquake JSON results.", e);
+        } finally {
+            // Release memory
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+
+            //Closing the input stream could throw an IOException, which is why
+            // the makeHttpRequest(Url url) method signigure specifies than an IOException
+            // could be thrown
+            if (inputStream != null) {
+                inputStream.close();
+            }
+        }
+
+        return jsonResponse;
+    }
+
+
+    private static String readFromStream(InputStream inputStream) throws IOException {
+
+        //After have InputStreamReader & BufferedReader; need to have a method show String: StringBuilder
+        StringBuilder output = new StringBuilder();
+
+        //Add this line last
+        if (inputStream != null) {
+
+            InputStreamReader inputStreamReader = new InputStreamReader(inputStream,
+                    Charset.forName("UTF-8"));
+            BufferedReader reader = new BufferedReader(inputStreamReader);
+            //After wrapping inputStreamReader in Buffered; need to read the data: readLine()
+            //'line' means a part of output from Buffered
+            String line = reader.readLine();
+            //Join gradual output of Buffered into 1 variable
+            while (line != null) {
+                //append these words to the variable 'output'
+                output.append(line);
+                line = reader.readLine();
+            }
+        }
+        return output.toString();
+    }
+
+
+    //NOW TIME TO UNITE ALL THE HELPERS METHOD WITH THIS HELPER METHOD
+    //Add in the fetchEarthquakeData() helper method that ties all the steps together
+    // - creating a URL, sending the request, processing the response.
+    // Since this is the only “public” QueryUtils method that
+    // the EarthquakeAsyncTask needs to interact with,
+    // make all other helper methods in QueryUtils “private”.
+    public static List<Earthquake> fetchEarthquakeData(String requestUrl) {
+
+        // createUrl using input para and then store it into URL variable
+        URL url = createUrl(requestUrl);
+
+
+        String jsonResponse = null;
+        try {
+            // Get data from the source, read it and store it into a String variable
+            jsonResponse = makeHttpRequest(url);
+        }
+        // makeHttpRequest require IOException (getting data from internet and read)
+        catch (IOException e) {
+            Log.e(LOG_TAG, "Problem making the HTTP request.", e);
+        }
+
+        // This line requires jsonResponse to have a wider scope, not just inside the try block!
+        // That's why we need to declare String jsonResponse = null prior to try block
+        // extractFeatureFromJson method return List<Earthquake> according to the method declaration,
+        // then store the return value into a List<Earthquake> variable named earthquakes
+        List<Earthquake> earthquakes = extractFeatureFromJson(jsonResponse);
+
         return earthquakes;
     }
 
