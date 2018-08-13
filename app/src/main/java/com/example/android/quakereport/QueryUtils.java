@@ -1,5 +1,6 @@
 package com.example.android.quakereport;
 
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -66,6 +67,11 @@ public final class QueryUtils {
      */
     // NOT REALLY UNDERSTAND WHY THIS METHOD CHANGES THE DATA TO LIST<EARTHQUAKE> INSTEAD OF ARRAYLIST
     private static List<Earthquake> extractFeatureFromJson(String earthquakeJSON) {
+
+        // If the JSON string is empty or null, then return early.
+        if (TextUtils.isEmpty(earthquakeJSON)) {
+            return null;
+        }
 
 
         // Create an empty ArrayList that we can sart adding earthquakes to
