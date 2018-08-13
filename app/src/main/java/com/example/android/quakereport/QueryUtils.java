@@ -223,7 +223,7 @@ public final class QueryUtils {
             }
 
         } catch (IOException e) {
-            Log.e(LOG_TAG, "Problem retriving the earthquake JSON results.", e);
+            Log.e(LOG_TAG, "Problem retrieving the earthquake JSON results.", e);
         } finally {
             // Release memory
             if (urlConnection != null) {
