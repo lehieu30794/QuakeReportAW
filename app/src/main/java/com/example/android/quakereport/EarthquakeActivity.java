@@ -82,6 +82,13 @@ public class EarthquakeActivity extends AppCompatActivity {
         // so the list can be populated in the user interface
         earthquakeListView.setAdapter(mAdapter);
 
+
+
+        // Start the AsyncTask to fetch the earthquake data
+        // Passing the URL here
+        EarthquakeAsyncTask task = new EarthquakeAsyncTask();
+        task.execute(USGS_REQUEST_URL);
+
         // Set an item click listener on the ListView, which sends an intent to a web browser
         // to open a website with more information about the selected earthquake
         earthquakeListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -107,8 +114,17 @@ public class EarthquakeActivity extends AppCompatActivity {
     private class EarthquakeAsyncTask extends AsyncTask<String, Void, List<Earthquake>>{
 
         @Override
-        protected List<Earthquake> doInBackground(String... strings) {
-            return null;
+        protected List<Earthquake> doInBackground(String... urls) {
+
+
+
+            if (urls.length < 1 || urls[0] == null){
+                return null;
+            }
+
+
+            List<Earthquake> result = QueryUtils.fetchEarthquakeData(urls [0]);
+            return result;
         }
 
         // VERY HARD TO GRASP HERE! because of new method and logic
